@@ -78,13 +78,13 @@ public:
 
     void OffsetsIncrease(size_t);
     void AddOffset(size_t n);
+    size_t GetOffset(size_t n) const;
 
 protected:
     template<typename T> friend class ColumnArrayT;
 
     ColumnArray(ColumnArray&& array);
 
-    size_t GetOffset(size_t n) const;
     size_t GetSize(size_t n) const;
     ColumnRef GetData();
     void Reset();
