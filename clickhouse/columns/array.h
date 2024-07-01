@@ -77,6 +77,7 @@ public:
     void Swap(Column&) override;
 
     void OffsetsIncrease(size_t);
+    void AddOffset(size_t n);
 
 protected:
     template<typename T> friend class ColumnArrayT;
@@ -86,7 +87,6 @@ protected:
     size_t GetOffset(size_t n) const;
     size_t GetSize(size_t n) const;
     ColumnRef GetData();
-    void AddOffset(size_t n);
     void Reset();
 
 private:
