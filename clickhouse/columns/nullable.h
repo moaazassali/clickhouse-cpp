@@ -73,17 +73,17 @@ public:
     template <typename NestedColumnType, typename = void>
     struct RawValueTypeHelper {
         using type    = ValueType;
-        using has_raw = std::false_type;
+        static constexpr bool has_raw = false;
     };
     // Specialization for when RawAt exists
     template <typename T>
     struct RawValueTypeHelper<T, std::void_t<decltype(std::declval<T>().RawAt(0))>> {
         using type    = std::optional<std::decay_t<decltype(std::declval<T>().RawAt(0))>>;
-        using has_raw = std::true_type;
+        static constexpr bool has_raw = true;
     };
 
     using RawValueType = typename RawValueTypeHelper<NestedColumnType>::type;
-    using has_raw      = typename RawValueTypeHelper<NestedColumnType>::has_raw;
+    static constexpr bool has_raw = RawValueTypeHelper<NestedColumnType>::has_raw;
 
     ColumnNullableT(std::shared_ptr<NestedColumnType> data, std::shared_ptr<ColumnUInt8> nulls)
         : ColumnNullable(data, nulls)
@@ -119,23 +119,12 @@ public:
         }
     }
 
-    // Primary template for when RawAt doesn't exist
-    template <typename = std::enable_if_t<!has_raw::value>>
-    inline void RawAt(size_t index) {
-        static_assert(false, "RawAt() is not supported for this column type");
-    }
-    template <typename = std::enable_if_t<!has_raw::value>>
-    inline void AppendRaw(size_t index) {
-        static_assert(false, "RawAt() is not supported for this column type");
-    }
-
-    // Specialization for when RawAt exists
-    template <typename = std::enable_if_t<has_raw::value>>
     inline RawValueType RawAt(size_t index) const {
+        static_assert(has_raw, "Unsupported method. Nested column does not support RawAt().");
         return IsNull(index) ? RawValueType{} : RawValueType{typed_nested_data_->RawAt(index)};
     }
-    template <typename = std::enable_if_t<has_raw::value>>
     inline void AppendRaw(RawValueType value) {
+        static_assert(has_raw, "Unsupported method. Nested column does not support AppendRaw().");
         ColumnNullable::Append(!value.has_value());
         if (value.has_value()) {
             typed_nested_data_->AppendRaw(std::move(*value));
